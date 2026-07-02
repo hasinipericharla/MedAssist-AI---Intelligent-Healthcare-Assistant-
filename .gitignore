@@ -1,0 +1,39 @@
+# --- Environment variables & secrets ---
+.env
+*.env
+.env.local
+config/secrets.py
+instance/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+venv/
+env/
+.venv/
+*.log
+
+# --- Database ---
+*.db
+*.sqlite3
+
+# --- Node / React (frontend) ---
+node_modules/
+build/
+dist/
+.npm/
+npm-debug.log*
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- ML models / generated files ---
+*.pkl
+*.joblib
+reports/*.pdf

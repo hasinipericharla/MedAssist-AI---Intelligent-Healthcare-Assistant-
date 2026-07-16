@@ -122,6 +122,9 @@ def predict_diseases(selected_symptoms, model_choice="random_forest"):
 
 if __name__ == "__main__":
     # Example matching the spec: Fever, dry cough, fatigue, headache -> Flu/COVID/Cold
-    example_symptoms = ["fever", "dry_cough", "fatigue", "headache"]
-    result = predict_diseases(example_symptoms)
+    # example_symptoms = ["fever", "dry_cough", "fatigue", "headache"]
+    example_symptoms = ["continuous_sneezing", "chills", "fatigue", "cough",
+                         "high_fever", "headache", "runny_nose", "congestion"]
+    # result = predict_diseases(example_symptoms)
+    result=predict_diseases(["yellowing_of_eyes", "dark_urine", "vomiting"])
     print(json.dumps(result, indent=2))

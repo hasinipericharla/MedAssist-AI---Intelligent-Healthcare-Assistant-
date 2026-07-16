@@ -12,6 +12,8 @@ swap in real data later without changing train_model.py or predict.py.
 import random
 import pandas as pd
 
+#random.seed(42) — locks Python's randomness so it gives the same "random"
+#  results every time you run the script, instead of different ones each run.
 random.seed(42)
 
 # Master list of symptoms used as feature columns

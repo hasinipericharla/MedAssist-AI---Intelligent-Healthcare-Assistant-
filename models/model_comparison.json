@@ -1,14 +1,14 @@
 {
   "decision_tree": {
-    "accuracy": 0.7917,
-    "precision_macro": 0.8146,
-    "recall_macro": 0.7917,
-    "f1_macro": 0.7939
+    "accuracy": 1.0,
+    "precision_macro": 1.0,
+    "recall_macro": 1.0,
+    "f1_macro": 1.0
   },
   "random_forest": {
-    "accuracy": 0.9042,
-    "precision_macro": 0.905,
-    "recall_macro": 0.9042,
-    "f1_macro": 0.904
+    "accuracy": 1.0,
+    "precision_macro": 1.0,
+    "recall_macro": 1.0,
+    "f1_macro": 1.0
   }
 }

@@ -50,11 +50,11 @@ def main():
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    dt = DecisionTreeClassifier(max_depth=8, random_state=42)
+    dt = DecisionTreeClassifier(random_state=42)
     dt.fit(X_train, y_train)
     dt_metrics = evaluate("Decision Tree", dt, X_test, y_test)
 
-    rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
+    rf = RandomForestClassifier(n_estimators=200, random_state=42)
     rf.fit(X_train, y_train)
     rf_metrics = evaluate("Random Forest", rf, X_test, y_test)
 

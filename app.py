@@ -1,5 +1,4 @@
 
-
 # """
 # app.py
 # ------
@@ -17,7 +16,7 @@
 # import json
 # import joblib
 # import numpy as np
-# from flask import Flask, request, jsonify
+# from flask import Flask, request, jsonify, render_template
 # from dotenv import load_dotenv
 
 # from chat_assistant import get_chat_response
@@ -36,10 +35,6 @@
 # with open(os.path.join(MODELS_DIR, "symptom_columns.json")) as f:
 #     SYMPTOM_COLUMNS = json.load(f)
 
-# @app.route("/", methods=["GET"])
-# def home():
-#     return jsonify({"status": "MedAssist AI server is running", "endpoints": ["/api/predict", "/api/chat"]}), 200
-
 
 # def symptoms_to_vector(symptoms):
 #     """
@@ -50,6 +45,23 @@
 #     """
 #     cleaned = {s.strip().lower().replace(" ", "_") for s in symptoms}
 #     return [1 if col in cleaned else 0 for col in SYMPTOM_COLUMNS]
+
+
+# @app.route("/", methods=["GET"])
+# def home():
+#     return render_template("index.html")
+
+
+# @app.route("/api/status", methods=["GET"])
+# def status():
+#     return jsonify({"status": "MedAssist AI server is running", "endpoints": ["/api/predict", "/api/chat", "/api/symptoms"]}), 200
+
+
+# @app.route("/api/symptoms", methods=["GET"])
+# def symptoms_list():
+#     """Lets the frontend build the symptom picker dynamically instead of
+#     hardcoding all 130+ symptom names in the HTML."""
+#     return jsonify({"symptoms": SYMPTOM_COLUMNS}), 200
 
 
 # @app.route("/api/predict", methods=["POST"])
@@ -123,6 +135,7 @@ The Flask entry point for MedAssist AI. Loads the models saved by
 train_model.py and exposes:
 
   POST /api/predict  -> Module 1 (disease prediction, DT vs RF)
+                         + Module 4 (SHAP-based explainability)
   POST /api/chat      -> Module 2 (AI health chat assistant)
 
 Run with:
@@ -133,6 +146,7 @@ import os
 import json
 import joblib
 import numpy as np
+import shap
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
@@ -152,6 +166,10 @@ dt_model = joblib.load(os.path.join(MODELS_DIR, "decision_tree.pkl"))
 with open(os.path.join(MODELS_DIR, "symptom_columns.json")) as f:
     SYMPTOM_COLUMNS = json.load(f)
 
+# Built once at startup, same reasoning as loading the models themselves --
+# SHAP TreeExplainer setup is not free, so we don't want to redo it per request.
+rf_explainer = shap.TreeExplainer(rf_model)
+
 
 def symptoms_to_vector(symptoms):
     """
@@ -162,6 +180,45 @@ def symptoms_to_vector(symptoms):
     """
     cleaned = {s.strip().lower().replace(" ", "_") for s in symptoms}
     return [1 if col in cleaned else 0 for col in SYMPTOM_COLUMNS]
+
+
+def explain_prediction(vector_2d, predicted_disease, cleaned_symptoms):
+    """
+    Per-prediction (local) explainability using SHAP -- contribution values
+    are specific to THIS input and THIS predicted disease, unlike
+    rf_model.feature_importances_ which is a fixed global ranking.
+    Returns [{"symptom": ..., "contribution_percent": ...}, ...] sorted desc.
+    """
+    class_index = list(rf_model.classes_).index(predicted_disease)
+    # shap_values = rf_explainer.shap_values(vector_2d)
+    shap_values = rf_explainer.shap_values(np.array(vector_2d))
+    # Handles both shap output formats depending on installed version:
+    # newer shap returns one array shaped (1, n_features, n_classes),
+    # older shap returns a list of arrays, one per class.
+    if isinstance(shap_values, list):
+        class_shap_values = shap_values[class_index][0]
+    else:
+        class_shap_values = shap_values[0, :, class_index]
+
+    contributions = {
+        col: class_shap_values[i]
+        for i, col in enumerate(SYMPTOM_COLUMNS)
+        if col in cleaned_symptoms and class_shap_values[i] > 0
+    }
+
+    total = sum(contributions.values())
+    if total == 0:
+        # None of the reported symptoms pushed toward this class (rare
+        # edge case) -- split evenly instead of returning an empty list.
+        equal_share = round(100 / len(cleaned_symptoms), 1) if cleaned_symptoms else 0
+        return [{"symptom": s, "contribution_percent": equal_share} for s in cleaned_symptoms]
+
+    result = [
+        {"symptom": symptom, "contribution_percent": round((value / total) * 100, 1)}
+        for symptom, value in contributions.items()
+    ]
+    result.sort(key=lambda x: x["contribution_percent"], reverse=True)
+    return result
 
 
 @app.route("/", methods=["GET"])
@@ -198,6 +255,7 @@ def predict():
         return jsonify({"error": f"Unrecognized symptoms: {unknown}"}), 400
 
     vector = [symptoms_to_vector(symptoms)]
+    cleaned_symptoms = {s.strip().lower().replace(" ", "_") for s in symptoms}
 
     # Random Forest is the primary prediction -- calibrated, spread-out
     # confidence across related diseases (per your Module 1 findings).
@@ -213,10 +271,14 @@ def predict():
     # comparison view from your Module 1 spec.
     dt_pred = dt_model.predict(vector)[0]
 
+    # Module 4: explain WHY the top RF prediction was made
+    prediction_reason = explain_prediction(vector, top3[0]["disease"], cleaned_symptoms)
+
     return jsonify({
         "top3_predictions": top3,
         "random_forest_top_prediction": top3[0]["disease"],
         "decision_tree_prediction": dt_pred,
+        "prediction_reason": prediction_reason,
     }), 200
 
 

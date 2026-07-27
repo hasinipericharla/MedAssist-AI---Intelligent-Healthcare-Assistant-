@@ -501,10 +501,19 @@ Rules:
 - Do not diagnose beyond what the app already predicted.
 """
 
+    # response = client.models.generate_content(
+    #     model="gemini-3.5-flash",
+    #     contents=question,
+    #     config=types.GenerateContentConfig(system_instruction=system_context),
+    # )
+    # return response.text.strip()
     response = client.models.generate_content(
         model="gemini-3.5-flash",
         contents=question,
-        config=types.GenerateContentConfig(system_instruction=system_context),
+        config=types.GenerateContentConfig(
+            system_instruction=system_context,
+            request_options={"timeout": 8},  # seconds -- fail fast, fall back quickly
+        ),
     )
     return response.text.strip()
 
@@ -519,18 +528,60 @@ _INTENT_PATTERNS = {
     "foods_to_avoid": [r"\bavoid\b.*\bfood\b", r"\bnot eat\b", r"\bwhat.*avoid\b"],
     "activity_advice": [r"\bcollege\b", r"\bwork\b", r"\bschool\b", r"\bgo out\b", r"\btravel\b"],
     "medicine_classes": [r"\bmedicine\b", r"\bmedication\b", r"\bdrug\b", r"\bprescri\b", r"\btablet\b"],
+    "severity": [r"\bdangerous\b", r"\bserious\b", r"\bsevere\b", r"\brisky\b", r"\bworried\b", r"\bshould i worry\b"],
+    "gratitude": [r"\bthank", r"\bthanks\b", r"\bappreciate\b"],
+}
+_GENERIC_FALLBACKS = {
+    "why": "This was flagged based on the combination of symptoms you reported matching a known pattern for this condition.",
+    "foods_to_eat": "In general, staying hydrated and eating light, nutritious meals supports recovery from most conditions.",
+    "foods_to_avoid": "In general, it's wise to avoid processed food, excess sugar, alcohol, and smoking while unwell.",
+    "activity_advice": "It's best to rest and avoid strenuous activity or attending college/work until you've been evaluated, especially if symptoms are new or worsening.",
+    "medicine_classes": "Only a doctor can safely recommend specific medicines for this condition based on a proper examination.",
+    "severity": "Severity can vary a lot from person to person, so it's not something this app can judge reliably. If your symptoms are severe, worsening, or worrying you, please see a doctor soon rather than waiting.",
+    "gratitude": "You're welcome! Take care of yourself, and don't hesitate to check in with a doctor if anything changes.",
 }
 
 
+# def get_rule_based_response(question: str, disease: str) -> str:
+#     """Simple keyword matcher over the knowledge base. Used when the LLM
+#     is unavailable, so the app degrades gracefully instead of crashing."""
+#     kb_entry = DISEASE_KB.get(disease)
+#     if not kb_entry:
+#         return (f"I don't have detailed information for '{disease}' yet. "
+#                 f"{GENERAL_DISCLAIMER}")
+
+#     q = question.lower()
+#     for intent, patterns in _INTENT_PATTERNS.items():
+#         if any(re.search(p, q) for p in patterns):
+#             value = kb_entry[intent]
+#             if isinstance(value, list):
+#                 value = ", ".join(value)
+#             return f"{value} {GENERAL_DISCLAIMER}"
+
+#     # No pattern matched -- give a general summary instead of a dead end.
+#     return (f"For {disease}: {kb_entry['why']} {GENERAL_DISCLAIMER}")
 def get_rule_based_response(question: str, disease: str) -> str:
     """Simple keyword matcher over the knowledge base. Used when the LLM
     is unavailable, so the app degrades gracefully instead of crashing."""
     kb_entry = DISEASE_KB.get(disease)
-    if not kb_entry:
-        return (f"I don't have detailed information for '{disease}' yet. "
-                f"{GENERAL_DISCLAIMER}")
-
     q = question.lower()
+
+    if not kb_entry:
+        # No specific data for this disease -- still give a useful,
+        # intent-aware generic answer instead of a dead end.
+        # for intent, patterns in _INTENT_PATTERNS.items():
+        #     if any(re.search(p, q) for p in patterns):
+        #         generic = _GENERIC_FALLBACKS[intent]
+        #         return f"{generic} {GENERAL_DISCLAIMER}"
+        for intent, patterns in _INTENT_PATTERNS.items():
+            if any(re.search(p, q) for p in patterns):
+                generic = _GENERIC_FALLBACKS[intent]
+                if intent == "gratitude":
+                    return generic
+                return f"{generic} {GENERAL_DISCLAIMER}"
+        return (f"I don't have detailed reference info for '{disease}' yet, "
+                f"but it's important to get it evaluated properly. {GENERAL_DISCLAIMER}")
+
     for intent, patterns in _INTENT_PATTERNS.items():
         if any(re.search(p, q) for p in patterns):
             value = kb_entry[intent]
@@ -538,7 +589,6 @@ def get_rule_based_response(question: str, disease: str) -> str:
                 value = ", ".join(value)
             return f"{value} {GENERAL_DISCLAIMER}"
 
-    # No pattern matched -- give a general summary instead of a dead end.
     return (f"For {disease}: {kb_entry['why']} {GENERAL_DISCLAIMER}")
 
 

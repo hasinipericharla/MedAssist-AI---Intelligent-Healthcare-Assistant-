@@ -145,6 +145,33 @@ el.predictBtn.addEventListener("click", async () => {
   }
 });
 
+function renderPredictionReason(reasons) {
+  const existing = document.getElementById("predictionReason");
+  if (existing) existing.remove();
+
+  if (!reasons || reasons.length === 0) return;
+
+  const html = `
+    <div id="predictionReason" class="result-card" style="margin-top:16px;">
+      <div class="result-top">
+        <span class="result-disease">Why this prediction?</span>
+      </div>
+      ${reasons
+        .map(
+          (r) => `
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <span>✔ ${prettySymptomName(r.symptom)}</span>
+          <span>${r.contribution_percent}%</span>
+        </div>`
+        )
+        .join("")}
+    </div>`;
+
+  el.dtPrediction.closest(".result-card")
+    ? el.dtPrediction.parentElement.insertAdjacentHTML("afterend", html)
+    : el.top3List.insertAdjacentHTML("afterend", html);
+}
+
 function renderResults(data) {
   el.resultsEmpty.classList.add("hidden");
   el.resultsContent.classList.remove("hidden");
@@ -166,7 +193,10 @@ function renderResults(data) {
     })
     .join("");
 
+  // el.dtPrediction.textContent = data.decision_tree_prediction;
   el.dtPrediction.textContent = data.decision_tree_prediction;
+  renderPredictionReason(data.prediction_reason);
+
 }
 
 // ---------------------------------------------------------------------
@@ -197,8 +227,13 @@ el.chatForm.addEventListener("submit", async (e) => {
   const question = el.chatInput.value.trim();
   if (!question || !state.lastPredictedDisease) return;
 
+  // addMessage("user", question);
+  // el.chatInput.value = "";
   addMessage("user", question);
   el.chatInput.value = "";
+  addMessage("assistant", "Thinking…");
+  const thinkingMsg = el.chatMessages.lastElementChild;
+
 
   try {
     const res = await fetch("/api/chat", {
@@ -216,8 +251,10 @@ el.chatForm.addEventListener("submit", async (e) => {
       addMessage("assistant", data.error || "Something went wrong.");
       return;
     }
+    thinkingMsg.remove();
     addMessage("assistant", data.answer, data.source);
   } catch (err) {
+    thinkingMsg.remove();
     addMessage("assistant", "Couldn't reach the server.");
   }
 });

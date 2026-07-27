@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedAssist AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-name">MedAssist <em>AI</em></span>
+    </div>
+    <svg class="pulse-line" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,20 60,20 75,4 90,36 105,20 300,20" />
+    </svg>
+  </header>
+
+  <main class="layout">
+
+    <!-- LEFT: symptom picker -->
+    <section class="panel symptom-panel">
+      <h2>What are you feeling?</h2>
+      <p class="hint">Search and select every symptom that applies.</p>
+
+      <input
+        type="text"
+        id="symptomSearch"
+        class="search-input"
+        placeholder="Search symptoms, e.g. cough, headache…"
+        autocomplete="off"
+      />
+
+      <div id="symptomList" class="symptom-list" aria-live="polite">
+        <p class="loading-text">Loading symptom list…</p>
+      </div>
+
+      <div id="selectedChips" class="chip-row"></div>
+
+      <button id="predictBtn" class="btn-primary" disabled>
+        Check my symptoms
+      </button>
+    </section>
+
+    <!-- RIGHT: results -->
+    <section class="panel results-panel">
+      <h2>Prediction</h2>
+
+      <div id="resultsEmpty" class="empty-state">
+        <p>Select your symptoms on the left, then run a check.</p>
+        <p class="empty-sub">Your top 3 possible conditions will appear here, with confidence scores and a Decision Tree vs Random Forest comparison.</p>
+      </div>
+
+      <div id="resultsContent" class="results-content hidden">
+        <div id="top3List" class="top3-list"></div>
+
+        <div class="model-compare">
+          <span class="compare-label">Decision Tree says</span>
+          <span id="dtPrediction" class="compare-value">—</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CHAT PANEL -->
+  <section id="chatPanel" class="chat-panel hidden">
+    <div class="chat-header">
+      <h2>Ask about <span id="chatDiseaseName">this</span></h2>
+      <p class="hint">Try: "What foods should I eat?" · "Can I go to college?" · "Why did I get this?"</p>
+    </div>
+
+    <div id="chatMessages" class="chat-messages"></div>
+
+    <form id="chatForm" class="chat-form">
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="Ask a follow-up question…"
+        autocomplete="off"
+        required
+      />
+      <button type="submit" class="btn-primary btn-send">Send</button>
+    </form>
+  </section>
+
+  <footer class="disclaimer">
+    MedAssist AI gives general information only — not a diagnosis or prescription.
+    Always confirm with a doctor for anything specific to you.
+  </footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

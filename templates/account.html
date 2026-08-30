@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}MedAssist AI — Account{% endblock %}
+{% block page_title %}Account{% endblock %}
+
+{% block content %}
+<section class="panel" style="max-width:520px;">
+  <h2>Your details</h2>
+  <form id="accountDetailsForm" class="form-grid">
+    <div class="field" style="grid-column:1/-1;">
+      <label for="ac-name">Name</label>
+      <input id="ac-name" type="text" required disabled />
+    </div>
+    <div class="field" style="grid-column:1/-1;">
+      <label for="ac-email">Email</label>
+      <input id="ac-email" type="email" required disabled />
+    </div>
+    <div style="grid-column:1/-1;">
+      <button type="button" id="editDetailsBtn" class="btn-secondary">Edit</button>
+      <button type="submit" id="saveDetailsBtn" class="btn-primary hidden" style="width:auto; padding:9px 22px;">Save changes</button>
+      <span id="detailsNote" class="hint" style="display:none;"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel" style="margin-top:20px; max-width:520px;">
+  <h3 style="font-size:0.95rem; margin-bottom:8px;">Change password</h3>
+  <form id="passwordForm" class="form-grid">
+    <div class="field" style="grid-column:1/-1;">
+      <label for="pw-current">Current password</label>
+      <input id="pw-current" type="password" required />
+    </div>
+    <div class="field">
+      <label for="pw-new">New password</label>
+      <input id="pw-new" type="password" required minlength="6" />
+    </div>
+    <div class="field">
+      <label for="pw-confirm">Confirm new password</label>
+      <input id="pw-confirm" type="password" required minlength="6" />
+    </div>
+    <div style="grid-column:1/-1;">
+      <button type="submit" class="btn-primary" style="width:auto; padding:9px 22px;">Update password</button>
+      <span id="passwordNote" class="hint" style="display:none;"></span>
+    </div>
+  </form>
+</section>
+
+<section class="panel" style="margin-top:20px; max-width:520px;">
+  <h3 style="font-size:0.95rem; margin-bottom:8px;">Two-step verification <span class="mock-tag">demo only</span></h3>
+  <p class="hint">No email/SMS backend yet, so the code is shown on-screen instead of sent to you.</p>
+  <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; font-weight:600;">
+    <input type="checkbox" id="twoFAToggle" /> Enable two-step verification on login
+  </label>
+  <div id="twoFASetup" class="hidden" style="margin-top:12px;">
+    <p class="hint">Demo code: <strong id="twoFADemoCode"></strong></p>
+    <div class="field" style="max-width:200px;">
+      <label for="twoFAConfirmInput">Enter code to confirm</label>
+      <input id="twoFAConfirmInput" type="text" maxlength="6" />
+    </div>
+    <button id="twoFAConfirmBtn" class="btn-secondary" style="margin-top:8px;">Confirm</button>
+  </div>
+  <p id="twoFANote" class="hint" style="display:none;"></p>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/account.js') }}"></script>
+{% endblock %}

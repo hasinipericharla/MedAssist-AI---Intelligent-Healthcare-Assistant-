@@ -1,0 +1,100 @@
+/* ---------------------------------------------------------------------
+   Standalone login/signup screen. Used only by auth.html, which does
+   NOT extend base.html -- no sidebar here on purpose, since the person
+   isn't "in" the app yet.
+--------------------------------------------------------------------- */
+
+.auth-body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+}
+
+.auth-wrap {
+  width: 100%;
+  max-width: 380px;
+  padding: 20px;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+}
+
+.auth-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px 26px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.auth-tab.active {
+  background: var(--surface);
+  color: var(--deep);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-form .btn-primary { margin-top: 4px; }
+
+.auth-mock-note {
+  text-align: center;
+  margin: 16px 0 0;
+}
+
+.auth-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth-form .field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.auth-form .field input {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+.auth-form .field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

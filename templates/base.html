@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% block title %}MedAssist AI{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app-shell.css') }}">
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="brand-mark">M</span>
+        <span class="brand-name">MedAssist <em>AI</em></span>
+      </div>
+
+      <nav class="nav-groups">
+        <div class="nav-group">
+          <p class="nav-label">Diagnose</p>
+          <a href="{{ url_for('predict_page') }}" class="nav-link {{ 'active' if active=='predict' }}">
+            <span class="nav-icon">◎</span> Symptom Check
+          </a>
+          <a href="{{ url_for('history_page') }}" class="nav-link {{ 'active' if active=='history' }}">
+            <span class="nav-icon">≡</span> Prediction History
+          </a>
+        </div>
+
+        <div class="nav-group">
+  <p class="nav-label">You</p>
+  <a href="{{ url_for('profile_page') }}" class="nav-link {{ 'active' if active=='profile' }}">
+    <span class="nav-icon">◐</span> Health Profile
+  </a>
+  <a href="{{ url_for('account_page') }}" class="nav-link {{ 'active' if active=='account' }}">
+    <span class="nav-icon">⚿</span> My Account
+  </a>
+  <a href="{{ url_for('reminders_page') }}" class="nav-link {{ 'active' if active=='reminders' }}">
+    <span class="nav-icon">◷</span> Medicine Reminders
+  </a>
+</div>
+
+        <div class="nav-group">
+          <p class="nav-label">Insights</p>
+          <a href="{{ url_for('dashboard_page') }}" class="nav-link {{ 'active' if active=='dashboard' }}">
+            <span class="nav-icon">▤</span> Analytics Dashboard
+          </a>
+          <a href="{{ url_for('hospitals_page') }}" class="nav-link {{ 'active' if active=='hospitals' }}">
+            <span class="nav-icon">✚</span> Nearby Help
+          </a>
+        </div>
+
+      </nav>
+
+      <!-- <div class="sidebar-foot">
+        <p>MedAssist AI gives general information only — not a diagnosis.</p>
+      </div> -->
+            <!-- <a href="{{ url_for('profile_page') }}" class="sidebar-user">
+        <span class="user-avatar" id="sidebarAvatar">?</span>
+        <span class="user-name" id="sidebarUserName">Not signed in</span>
+      </a> -->
+      <button id="sidebarLogoutBtn" class="sidebar-logout">
+        <span class="nav-icon">⏻</span> Log out
+      </button>
+
+      <div class="sidebar-foot">
+        <p>MedAssist AI gives general information only — not a diagnosis.</p>
+      </div>
+    </aside>
+
+    <div class="main-col">
+                  <header class="topbar-slim">
+        <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
+        <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+
+        <div class="topbar-right">
+          <div class="notif-wrap">
+            <button id="notifBellBtn" class="btn-icon" aria-label="Notifications">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span id="notifBadge" class="notif-badge hidden">0</span>
+            </button>
+            <div id="notifDropdown" class="notif-dropdown hidden">
+              <div class="notif-header">
+                <span>Notifications</span>
+                <button id="notifClearBtn" class="notif-clear">Clear all</button>
+              </div>
+              <div id="notifList" class="notif-list"></div>
+            </div>
+          </div>
+
+          <a href="{{ url_for('account_page') }}" class="topbar-avatar" title="Account">
+            <span class="user-avatar" id="topbarAvatar">?</span>
+          </a>
+        </div>
+      </header>
+
+      <main class="page-content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+<script src="{{ url_for('static', filename='js/shell.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

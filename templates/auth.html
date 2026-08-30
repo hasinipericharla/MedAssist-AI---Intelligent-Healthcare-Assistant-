@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedAssist AI — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth-standalone.css') }}">
+</head>
+<body class="auth-body">
+
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-name">MedAssist <em>AI</em></span>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-tab="login">Log in</button>
+        <button type="button" class="auth-tab" data-tab="signup">Sign up</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <div class="field">
+          <label for="li-email">Email</label>
+          <input id="li-email" type="email" required />
+        </div>
+        <div class="field">
+          <label for="li-password">Password</label>
+          <input id="li-password" type="password" required />
+        </div>
+        <button type="submit" class="btn-primary">Log in</button>
+      </form>
+
+      <form id="signupForm" class="auth-form hidden">
+        <div class="field">
+          <label for="su-name">Name</label>
+          <input id="su-name" type="text" required />
+        </div>
+        <div class="field">
+          <label for="su-email">Email</label>
+          <input id="su-email" type="email" required />
+        </div>
+        <div class="field">
+          <label for="su-password">Password</label>
+          <input id="su-password" type="password" required minlength="6" />
+        </div>
+        <button type="submit" class="btn-primary">Create account</button>
+      </form>
+      <div id="twoFAStep" class="auth-form hidden">
+  <p class="hint">Two-step verification is on for this account. Demo code (no real SMS/email yet): <strong id="loginDemoCode"></strong></p>
+  <div class="field">
+    <label for="twoFALoginInput">Enter code</label>
+    <input id="twoFALoginInput" type="text" maxlength="6" />
+  </div>
+  <button type="button" id="twoFALoginConfirmBtn" class="btn-primary">Verify & continue</button>
+</div>
+
+      <p id="authError" class="hint" style="color:var(--warn); display:none; margin-top:12px;"></p>
+      <p class="hint auth-mock-note">Local account for now — no JWT backend yet.</p>
+    </div>
+  </div>
+
+<script src="{{ url_for('static', filename='js/shell.js') }}"></script>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>

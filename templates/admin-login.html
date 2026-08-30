@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedAssist AI — Admin Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth-standalone.css') }}">
+</head>
+<body class="auth-body">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-name">MedAssist <em>Admin</em></span>
+    </div>
+    <div class="auth-card">
+      <form id="adminLoginForm" class="auth-form">
+        <div class="field">
+          <label for="ad-email">Admin email</label>
+          <input id="ad-email" type="email" required />
+        </div>
+        <div class="field">
+          <label for="ad-password">Admin password</label>
+          <input id="ad-password" type="password" required />
+        </div>
+        <button type="submit" class="btn-primary">Log in as admin</button>
+      </form>
+      <p id="adminAuthError" class="hint" style="color:var(--warn); display:none; margin-top:12px;"></p>
+      <p class="hint auth-mock-note">Demo credentials: admin@medassist.ai / admin123</p>
+    </div>
+  </div>
+<script src="{{ url_for('static', filename='js/admin-auth.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+
+{% extends "base.html" %}
+{% block title %}MedAssist AI — Health Profile{% endblock %}
+{% block page_title %}Health Profile{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2>Your Health Profile <span class="mock-tag">stored on this device</span></h2>
+  <p class="hint">Used to personalize recommendations and your health score — e.g. instead of "drink water", you get "based on your BMI and age, increase hydration and avoid cold drinks."</p>
+
+  <form id="profileForm" class="form-grid">
+    <div class="field">
+      <label for="pf-name">Name</label>
+      <input id="pf-name" type="text" placeholder="Your name" />
+    </div>
+    <div class="field">
+      <label for="pf-age">Age</label>
+      <input id="pf-age" type="number" min="0" max="120" required />
+    </div>
+    <div class="field">
+      <label for="pf-gender">Gender</label>
+      <select id="pf-gender">
+        <option value="">Select…</option>
+        <option>Female</option>
+        <option>Male</option>
+        <option>Other</option>
+        <option>Prefer not to say</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="pf-height">Height (cm)</label>
+      <input id="pf-height" type="number" min="0" required />
+    </div>
+    <div class="field">
+      <label for="pf-weight">Weight (kg)</label>
+      <input id="pf-weight" type="number" min="0" required />
+    </div>
+    <div class="field">
+      <label for="pf-bmi">BMI (calculated)</label>
+      <input id="pf-bmi" type="text" disabled placeholder="—" />
+    </div>
+    <div class="field" style="grid-column: 1 / -1;">
+      <label for="pf-history">Medical history</label>
+      <textarea id="pf-history" rows="2" placeholder="e.g. asthma diagnosed 2019, hypertension"></textarea>
+    </div>
+    <div class="field" style="grid-column: 1 / -1;">
+      <label for="pf-allergies">Allergies</label>
+      <textarea id="pf-allergies" rows="2" placeholder="e.g. penicillin, peanuts"></textarea>
+    </div>
+
+    <div style="grid-column: 1 / -1; display:flex; gap:10px; align-items:center;">
+      <button type="submit" class="btn-primary" style="width:auto; padding:10px 24px;">Save Profile</button>
+      <span id="profileSavedNote" class="hint" style="display:none; margin:0;">Saved.</span>
+    </div>
+  </form>
+</section>
+
+<section class="panel" style="margin-top:20px;">
+  <h2>Personalized recommendation preview</h2>
+  <p class="hint">This is what the chat assistant and health score panel will factor in.</p>
+  <div id="recommendationPreview" class="result-card">Fill in your profile to see a personalized recommendation preview.</div>
+</section>
+
+<!-- <section class="panel" style="margin-top:20px;">
+  <h2>Account Settings</h2>
+
+  <h3 style="font-size:0.95rem; margin-bottom:8px;">Change password</h3>
+  <form id="passwordForm" class="form-grid">
+    <div class="field" style="grid-column:1/-1;">
+      <label for="pw-current">Current password</label>
+      <input id="pw-current" type="password" required />
+    </div>
+    <div class="field">
+      <label for="pw-new">New password</label>
+      <input id="pw-new" type="password" required minlength="6" />
+    </div>
+    <div class="field">
+      <label for="pw-confirm">Confirm new password</label>
+      <input id="pw-confirm" type="password" required minlength="6" />
+    </div>
+    <div style="grid-column:1/-1;">
+      <button type="submit" class="btn-primary" style="width:auto; padding:9px 22px;">Update password</button>
+      <span id="passwordNote" class="hint" style="display:none;"></span>
+    </div>
+  </form>
+
+  <hr style="border:none; border-top:1px solid var(--border); margin:22px 0;" />
+
+  <h3 style="font-size:0.95rem; margin-bottom:8px;">Two-step verification <span class="mock-tag">demo only</span></h3>
+  <p class="hint">Since there's no email/SMS backend yet, the verification code is shown on-screen instead of sent to you — this demonstrates the flow for now.</p>
+  <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; font-weight:600;">
+    <input type="checkbox" id="twoFAToggle" /> Enable two-step verification on login
+  </label>
+  <div id="twoFASetup" class="hidden" style="margin-top:12px;">
+    <p class="hint">Demo code: <strong id="twoFADemoCode"></strong></p>
+    <div class="field" style="max-width:200px;">
+      <label for="twoFAConfirmInput">Enter code to confirm</label>
+      <input id="twoFAConfirmInput" type="text" maxlength="6" />
+    </div>
+    <button id="twoFAConfirmBtn" class="btn-secondary" style="margin-top:8px;">Confirm</button>
+  </div>
+  <p id="twoFANote" class="hint" style="display:none;"></p>
+</section> -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

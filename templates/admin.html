@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedAssist AI — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app-shell.css') }}">
+</head>
+<body>
+<script src="{{ url_for('static', filename='js/admin-auth.js') }}"></script>
+
+<header class="topbar-slim">
+  <span class="topbar-title">Admin Dashboard</span>
+  <button id="adminLogoutBtn" class="btn-secondary" style="margin-left:auto;">Log out</button>
+</header>
+
+<main class="page-content" style="max-width:1100px; margin:0 auto;">
+  <p class="hint">
+    <strong>Important limitation:</strong> this page can only read data stored in <em>this browser</em> (users signed up here, predictions run here). A real admin dashboard needs users/predictions stored server-side (a database) so it can show data across every user's device. Treat this as a UI shell to wire up once that exists.
+  </p>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-value" id="adminUserCount">0</div><div class="stat-label">Registered users (this device)</div></div>
+    <div class="stat-card"><div class="stat-value" id="adminPredictionCount">0</div><div class="stat-label">Predictions logged (this device)</div></div>
+    <div class="stat-card"><div class="stat-value" id="adminFeedbackCount">0</div><div class="stat-label">Feedback responses</div></div>
+  </div>
+
+  <section class="panel">
+    <h2>Users</h2>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Joined</th></tr></thead>
+      <tbody id="adminUserBody"></tbody>
+    </table>
+    <div id="adminUserEmpty" class="empty-block hidden"><p>No users signed up on this device yet.</p></div>
+  </section>
+
+  <section class="panel" style="margin-top:20px;">
+    <h2>Recent predictions</h2>
+    <div class="search-row" style="align-items:center; margin-bottom:10px;">
+      <button id="adminDownloadBtn" class="btn-secondary">⬇ Download all predictions (CSV)</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Disease</th><th>Confidence</th></tr></thead>
+      <tbody id="adminPredictionBody"></tbody>
+    </table>
+    <div id="adminPredictionEmpty" class="empty-block hidden"><p>No predictions logged yet.</p></div>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

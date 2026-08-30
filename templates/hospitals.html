@@ -1,0 +1,40 @@
+
+{% extends "base.html" %}
+{% block title %}MedAssist AI — Nearby Help{% endblock %}
+{% block page_title %}Nearby Help{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2>Need Medical Help?</h2>
+  <p class="hint">Uses your device location and OpenStreetMap's free Overpass API — no API key needed, and nothing is sent to our server.</p>
+
+  <button id="locateBtn" class="btn-primary" style="width:auto; padding:10px 24px;">📍 Find hospitals & clinics near me</button>
+  <p id="locateStatus" class="hint" style="margin-top:10px;"></p>
+
+  <div class="page-grid" style="margin-top:18px;">
+    <div>
+      <h2 style="font-size:1rem;">Hospitals</h2>
+      <div id="hospitalList"></div>
+    </div>
+    <div>
+      <h2 style="font-size:1rem;">Clinics</h2>
+      <div id="clinicList"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" style="margin-top:20px;">
+  <h2>Emergency numbers</h2>
+  <p class="hint">General emergency lines — always call local emergency services first in a life-threatening situation.</p>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-value">112</div><div class="stat-label">EU / International</div></div>
+    <div class="stat-card"><div class="stat-value">911</div><div class="stat-label">US / Canada</div></div>
+    <div class="stat-card"><div class="stat-value">108</div><div class="stat-label">India — ambulance</div></div>
+    <div class="stat-card"><div class="stat-value">999</div><div class="stat-label">UK</div></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/hospitals.js') }}"></script>
+{% endblock %}

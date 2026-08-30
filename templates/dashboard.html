@@ -1,0 +1,39 @@
+
+{% extends "base.html" %}
+{% block title %}MedAssist AI — Analytics Dashboard{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="stat-row">
+  <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total predictions</div></div>
+  <div class="stat-card"><div class="stat-value" id="statAvgConfidence">—</div><div class="stat-label">Average confidence</div></div>
+  <div class="stat-card"><div class="stat-value" id="statTopDisease">—</div><div class="stat-label">Most common prediction</div></div>
+  <div class="stat-card"><div class="stat-value">100%*</div><div class="stat-label">Model accuracy (test set)</div></div>
+</div>
+<p class="hint" style="margin-top:-10px;">*From your Module 1 training evaluation on the Kaggle dataset — this card is static until you wire it to a live model-metrics endpoint. Everything else on this page reflects your actual prediction history on this device.</p>
+
+<div class="page-grid">
+  <section class="panel">
+    <h2>Disease distribution</h2>
+    <canvas id="diseaseChart" height="220"></canvas>
+  </section>
+  <section class="panel">
+    <h2>Most common symptoms</h2>
+    <canvas id="symptomChart" height="220"></canvas>
+  </section>
+</div>
+
+<section class="panel" style="margin-top:20px;">
+  <h2>Weekly prediction trend</h2>
+  <canvas id="trendChart" height="120"></canvas>
+</section>
+
+<div id="dashboardEmpty" class="empty-block hidden">
+  <p>No predictions yet — run a few symptom checks on the Symptom Check page, then come back here.</p>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

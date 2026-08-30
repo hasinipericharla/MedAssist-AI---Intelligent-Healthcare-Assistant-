@@ -1,0 +1,40 @@
+
+{% extends "base.html" %}
+{% block title %}MedAssist AI — Medicine Reminders{% endblock %}
+{% block page_title %}Medicine Reminders{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2>Medicine Reminders <span class="mock-tag">stored on this device</span></h2>
+  <p class="hint">Uses your browser's notification permission to alert you while this tab is open. Close-tab-persistent push notifications need a backend + service worker, not covered here yet.</p>
+
+  <form id="reminderForm" class="form-grid">
+    <div class="field">
+      <label for="rm-name">Medicine name</label>
+      <input id="rm-name" type="text" required placeholder="e.g. Paracetamol" />
+    </div>
+    <div class="field">
+      <label for="rm-time">Time</label>
+      <input id="rm-time" type="time" required />
+    </div>
+    <div style="grid-column: 1 / -1;">
+      <button type="submit" class="btn-primary" style="width:auto; padding:10px 24px;">Add Reminder</button>
+    </div>
+  </form>
+</section>
+
+<section class="panel" style="margin-top:20px;">
+  <h2>Your reminders</h2>
+  <div id="reminderListWrap">
+    <table class="data-table">
+      <thead><tr><th>Medicine</th><th>Time</th><th></th></tr></thead>
+      <tbody id="reminderBody"></tbody>
+    </table>
+    <div id="reminderEmpty" class="empty-block hidden"><p>No reminders set yet.</p></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/reminders.js') }}"></script>
+{% endblock %}

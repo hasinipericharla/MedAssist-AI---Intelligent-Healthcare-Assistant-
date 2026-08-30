@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}
+{% block title %}MedAssist AI — Prediction History{% endblock %}
+{% block page_title %}Prediction History{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2>Prediction History <span class="mock-tag">stored on this device</span></h2>
+  <p class="hint">Every symptom check you run on the Symptom Check page is logged here automatically.</p>
+
+  <div class="search-row" style="align-items:center;">
+    <input id="historyFilter" type="text" class="search-input" placeholder="Filter by disease name…" />
+    <button id="downloadHistoryBtn" class="btn-secondary">⬇ Download CSV</button>
+    <button id="clearHistoryBtn" class="btn-secondary">🗑 Clear</button>
+  </div>
+
+  <div id="historyTableWrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Date</th><th>Predicted disease</th><th>Confidence</th><th>Symptoms</th></tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div id="historyEmpty" class="empty-block hidden">
+      <p>No predictions yet. Run a symptom check to see it appear here.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}

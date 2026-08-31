@@ -11,6 +11,11 @@ const ACCENT_SOFT = "#DCF0EC";
 const DEEP = "#123C3C";
 const WARN = "#E2673A";
 
+// const ACCENT = "#8B6FB5";
+// const ACCENT_SOFT = "#DCD3E8";
+// const DEEP = "#4A3B6B";
+// const WARN = "#E2673A";
+
 const history = MA.getHistory();
 
 if (history.length === 0) {

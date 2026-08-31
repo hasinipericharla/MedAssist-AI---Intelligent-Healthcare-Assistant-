@@ -28,7 +28,7 @@ def check_output_shape():
     assert 99 <= shap_total <= 101, f"SHAP percentages don't sum to ~100: {shap_total}"
     assert 99 <= global_total <= 101, f"Global percentages don't sum to ~100: {global_total}"
 
-    print("✅ Output shape check passed")
+    print("[OK] Output shape check passed")
 
 
 def check_determinism():
@@ -36,7 +36,7 @@ def check_determinism():
     r1 = predict_diseases(symptoms)
     r2 = predict_diseases(symptoms)
     assert r1["prediction_reason"] == r2["prediction_reason"], "SHAP explanation is not deterministic!"
-    print("✅ Determinism check passed")
+    print("[OK] Determinism check passed")
 
 
 def check_context_sensitivity():
@@ -53,7 +53,7 @@ def check_context_sensitivity():
     print(f"dark_urine global: {global_a}% vs {global_b}%  (expected to stay close/identical)")
 
     assert shap_a != shap_b, "SHAP contribution did not change across contexts — check explainer logic"
-    print("✅ Context-sensitivity check passed")
+    print("[OK] Context-sensitivity check passed")
 
 
 if __name__ == "__main__":

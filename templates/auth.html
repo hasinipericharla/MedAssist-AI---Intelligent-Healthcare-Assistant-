@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,63 +8,285 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-standalone.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/neomorphism.css') }}">
 </head>
 <body class="auth-body">
 
-  <div class="auth-wrap">
-    <div class="auth-brand">
-      <span class="brand-mark">M</span>
-      <span class="brand-name">MedAssist <em>AI</em></span>
-    </div>
+  <div class="auth-shell">
 
-    <div class="auth-card">
-      <div class="auth-tabs">
-        <button type="button" class="auth-tab active" data-tab="login">Log in</button>
-        <button type="button" class="auth-tab" data-tab="signup">Sign up</button>
+    <!-- ============ Left: brand / content panel ============ -->
+    <aside class="auth-hero">
+      <div class="auth-hero-top">
+        <div class="auth-brand">
+          <span class="brand-mark">M</span>
+          <span class="brand-name">MedAssist <em>AI</em></span>
+        </div>
+        <p class="auth-eyebrow">AI HEALTH COMPANION</p>
+        <h1 class="auth-headline">Care that keeps pace with you.</h1>
+        <p class="auth-subhead">Symptom checks, hospitals, and your health history — all in one place.</p>
       </div>
 
-      <form id="loginForm" class="auth-form">
-        <div class="field">
-          <label for="li-email">Email</label>
-          <input id="li-email" type="email" required />
-        </div>
-        <div class="field">
-          <label for="li-password">Password</label>
-          <input id="li-password" type="password" required />
-        </div>
-        <button type="submit" class="btn-primary">Log in</button>
-      </form>
+      <ul class="auth-feature-list">
+        <li><span class="feat-icon" aria-hidden="true">🩺</span><strong>AI symptom prediction</strong></li>
+        <li><span class="feat-icon" aria-hidden="true">🏥</span><strong>Find nearby hospitals</strong></li>
+        <li><span class="feat-icon" aria-hidden="true">📈</span><strong>Track your history</strong></li>
+        <li><span class="feat-icon" aria-hidden="true">⏰</span><strong>Reminders that stick</strong></li>
+      </ul>
 
-      <form id="signupForm" class="auth-form hidden">
-        <div class="field">
-          <label for="su-name">Name</label>
-          <input id="su-name" type="text" required />
-        </div>
-        <div class="field">
-          <label for="su-email">Email</label>
-          <input id="su-email" type="email" required />
-        </div>
-        <div class="field">
-          <label for="su-password">Password</label>
-          <input id="su-password" type="password" required minlength="6" />
-        </div>
-        <button type="submit" class="btn-primary">Create account</button>
-      </form>
-      <div id="twoFAStep" class="auth-form hidden">
-  <p class="hint">Two-step verification is on for this account. Demo code (no real SMS/email yet): <strong id="loginDemoCode"></strong></p>
-  <div class="field">
-    <label for="twoFALoginInput">Enter code</label>
-    <input id="twoFALoginInput" type="text" maxlength="6" />
-  </div>
-  <button type="button" id="twoFALoginConfirmBtn" class="btn-primary">Verify & continue</button>
-</div>
+      <p class="auth-hero-trust">🔒 Your data stays private — nothing is shared with third parties.</p>
+    </aside>
 
-      <p id="authError" class="hint" style="color:var(--warn); display:none; margin-top:12px;"></p>
-      <p class="hint auth-mock-note">Local account for now — no JWT backend yet.</p>
+    <!-- ============ Right: existing auth card (unchanged logic) ============ -->
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login">Log in</button>
+          <button type="button" class="auth-tab" data-tab="signup">Sign up</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <div class="field">
+            <label for="li-email">Email</label>
+            <input id="li-email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="li-password">Password</label>
+            <input id="li-password" type="password" required />
+          </div>
+          <div class="field-meta">
+            <a href="#" id="forgotPasswordLink" class="auth-link">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn-primary">Log in</button>
+        </form>
+
+        <form id="signupForm" class="auth-form hidden">
+          <div class="field">
+            <label for="su-name">Name</label>
+            <input id="su-name" type="text" required />
+          </div>
+          <div class="field">
+            <label for="su-email">Email</label>
+            <input id="su-email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="su-password">Password</label>
+            <input id="su-password" type="password" required minlength="6" />
+          </div>
+          <button type="submit" class="btn-primary">Create account</button>
+        </form>
+
+        <!-- ============ Sign up: verify OTP before account is created ============ -->
+        <form id="signupOtpStep" class="auth-form hidden">
+          <p class="auth-step-title">🔐 Verify your email</p>
+          <p class="hint">Demo code (no real email backend yet): <strong id="signupDemoCode"></strong></p>
+          <div class="field">
+            <label for="signup-otp">6-digit code</label>
+            <input id="signup-otp" type="text" maxlength="6" required />
+          </div>
+          <p id="signupOtpError" class="hint" style="color:var(--warn); display:none;"></p>
+          <button type="submit" class="btn-primary">Verify &amp; create account</button>
+          <a href="#" class="auth-link auth-back-link" data-back-to="signupForm">← Back to sign up</a>
+        </form>
+
+        <div id="twoFAStep" class="auth-form hidden">
+          <p class="hint">Two-step verification is on for this account. Demo code (no real SMS/email yet): <strong id="loginDemoCode"></strong></p>
+          <div class="field">
+            <label for="twoFALoginInput">Enter code</label>
+            <input id="twoFALoginInput" type="text" maxlength="6" />
+          </div>
+          <button type="button" id="twoFALoginConfirmBtn" class="btn-primary">Verify &amp; continue</button>
+        </div>
+
+        <!-- ============ Forgot password: step 1 — request OTP ============ -->
+        <form id="forgotEmailStep" class="auth-form hidden">
+          <p class="auth-step-title">📧 Reset your password</p>
+          <p class="hint">Enter the email on your account and we'll send a one-time code.</p>
+          <div class="field">
+            <label for="forgot-email">Email</label>
+            <input id="forgot-email" type="email" required />
+          </div>
+          <button type="submit" class="btn-primary">Send code</button>
+          <a href="#" class="auth-link auth-back-link" data-back-to="loginForm">← Back to log in</a>
+        </form>
+
+        <!-- ============ Forgot password: step 2 — verify OTP ============ -->
+        <form id="forgotOtpStep" class="auth-form hidden">
+          <p class="auth-step-title">🔐 Enter the code</p>
+          <p class="hint">Demo code (no real email backend yet): <strong id="forgotDemoCode"></strong></p>
+          <div class="field">
+            <label for="forgot-otp">6-digit code</label>
+            <input id="forgot-otp" type="text" maxlength="6" required />
+          </div>
+          <p id="forgotOtpError" class="hint" style="color:var(--warn); display:none;"></p>
+          <button type="submit" class="btn-primary">Verify code</button>
+          <a href="#" class="auth-link auth-back-link" data-back-to="forgotEmailStep">← Use a different email</a>
+        </form>
+
+        <!-- ============ Forgot password: step 3 — set new password ============ -->
+        <form id="resetPasswordStep" class="auth-form hidden">
+          <p class="auth-step-title">🔑 Choose a new password</p>
+          <div class="field">
+            <label for="reset-password">New password</label>
+            <input id="reset-password" type="password" minlength="6" required />
+          </div>
+          <div class="field">
+            <label for="reset-password-confirm">Confirm new password</label>
+            <input id="reset-password-confirm" type="password" minlength="6" required />
+          </div>
+          <p id="resetPasswordError" class="hint" style="color:var(--warn); display:none;"></p>
+          <button type="submit" class="btn-primary">Reset password</button>
+        </form>
+
+        <!-- ============ Forgot password: done ============ -->
+        <div id="resetSuccessStep" class="auth-form hidden">
+          <p class="auth-step-title">✅ Password updated</p>
+          <p class="hint">Your password has been reset. Log in with your new password.</p>
+          <button type="button" class="btn-primary" data-back-to="loginForm">Back to log in</button>
+        </div>
+
+        <p id="authError" class="hint" style="color:var(--warn); display:none; margin-top:12px;"></p>
+        <p class="hint auth-mock-note">🧪 Local account for now — no JWT backend yet.</p>
+      </div>
     </div>
+
   </div>
 
 <script src="{{ url_for('static', filename='js/shell.js') }}"></script>
 <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script>
+/* ---------------------------------------------------------------------
+   Forgot-password flow (email -> OTP -> new password). Self-contained
+   so it doesn't touch auth.js's existing login/signup/2FA tab logic --
+   it only reacts to the new elements added above. Demo-only: the OTP
+   is generated and shown on screen, matching the existing 2FA mock
+   pattern, since there's no real email backend yet.
+--------------------------------------------------------------------- */
+(function () {
+  var steps = ['loginForm', 'signupForm', 'twoFAStep', 'forgotEmailStep', 'forgotOtpStep', 'resetPasswordStep', 'resetSuccessStep', 'signupOtpStep'];
+  var tabs = document.querySelector('.auth-tabs');
+  var currentForgotOtp = null;
+  var currentSignupOtp = null;
+
+  function showStep(id) {
+    steps.forEach(function (stepId) {
+      var el = document.getElementById(stepId);
+      if (!el) return;
+      el.classList.toggle('hidden', stepId !== id);
+    });
+    if (tabs) tabs.classList.toggle('hidden', id !== 'loginForm' && id !== 'signupForm');
+  }
+
+  function setActiveTab(target) {
+    var loginTab = document.querySelector('.auth-tab[data-tab="login"]');
+    var signupTab = document.querySelector('.auth-tab[data-tab="signup"]');
+    if (target === 'loginForm') {
+      if (loginTab) loginTab.classList.add('active');
+      if (signupTab) signupTab.classList.remove('active');
+    } else if (target === 'signupForm') {
+      if (signupTab) signupTab.classList.add('active');
+      if (loginTab) loginTab.classList.remove('active');
+    }
+  }
+
+  function generateCode() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  document.getElementById('forgotPasswordLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    showStep('forgotEmailStep');
+  });
+
+  document.querySelectorAll('[data-back-to]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      var target = el.getAttribute('data-back-to');
+      setActiveTab(target);
+      showStep(target);
+    });
+  });
+
+  document.getElementById('forgotEmailStep').addEventListener('submit', function (e) {
+    e.preventDefault();
+    currentForgotOtp = generateCode();
+    document.getElementById('forgotDemoCode').textContent = currentForgotOtp;
+    document.getElementById('forgot-otp').value = '';
+    document.getElementById('forgotOtpError').style.display = 'none';
+    showStep('forgotOtpStep');
+  });
+
+  document.getElementById('forgotOtpStep').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var entered = document.getElementById('forgot-otp').value.trim();
+    var errorEl = document.getElementById('forgotOtpError');
+    if (entered !== currentForgotOtp) {
+      errorEl.textContent = "That code doesn't match. Check the demo code and try again.";
+      errorEl.style.display = 'block';
+      return;
+    }
+    document.getElementById('reset-password').value = '';
+    document.getElementById('reset-password-confirm').value = '';
+    document.getElementById('resetPasswordError').style.display = 'none';
+    showStep('resetPasswordStep');
+  });
+
+  document.getElementById('resetPasswordStep').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var pw = document.getElementById('reset-password').value;
+    var confirm = document.getElementById('reset-password-confirm').value;
+    var errorEl = document.getElementById('resetPasswordError');
+    if (pw !== confirm) {
+      errorEl.textContent = "Passwords don't match.";
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (pw.length < 6) {
+      errorEl.textContent = 'Password must be at least 6 characters.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    showStep('resetSuccessStep');
+  });
+
+  /* ---------------------------------------------------------------------
+     Sign-up OTP gate. auth.js already listens for signupForm's 'submit'
+     event to actually create the account, and its exact logic isn't
+     visible here -- so rather than adding a second, possibly-conflicting
+     submit listener on the same form, this intercepts the CLICK on the
+     "Create account" button instead. preventDefault() on that click stops
+     the browser from ever emitting a submit event, so auth.js's handler
+     doesn't run yet. Only once the OTP is verified does this call
+     signupForm.requestSubmit() to dispatch a real submit event -- at
+     which point auth.js's existing handler runs exactly as before.
+  --------------------------------------------------------------------- */
+  var signupForm = document.getElementById('signupForm');
+  var signupSubmitBtn = signupForm.querySelector('button[type="submit"]');
+
+  signupSubmitBtn.addEventListener('click', function (e) {
+    if (!signupForm.checkValidity()) return; // let native validation messages show
+    e.preventDefault();
+    currentSignupOtp = generateCode();
+    document.getElementById('signupDemoCode').textContent = currentSignupOtp;
+    document.getElementById('signup-otp').value = '';
+    document.getElementById('signupOtpError').style.display = 'none';
+    showStep('signupOtpStep');
+  });
+
+  document.getElementById('signupOtpStep').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var entered = document.getElementById('signup-otp').value.trim();
+    var errorEl = document.getElementById('signupOtpError');
+    if (entered !== currentSignupOtp) {
+      errorEl.textContent = "That code doesn't match. Check the demo code and try again.";
+      errorEl.style.display = 'block';
+      return;
+    }
+    signupForm.requestSubmit();
+    // Fallback in case auth.js doesn't already move the view on success.
+    setActiveTab('loginForm');
+    showStep('loginForm');
+  });
+})();
+</script>
 </body>
 </html>

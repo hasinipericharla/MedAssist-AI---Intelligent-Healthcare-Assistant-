@@ -1,0 +1,214 @@
+/* ---------------------------------------------------------------------
+   Neomorphism theme layer for MedAssist AI -- Teal palette.
+
+   Soft UI: background and card colors are nearly IDENTICAL, with dual
+   box-shadows (one light, one dark, both diffuse) creating the illusion
+   of depth instead of borders/flat drop-shadows. This file overrides
+   shadows/borders/backgrounds on top of your existing style.css +
+   app-shell.css -- layout, spacing, and grid rules are untouched.
+
+   It ALSO redefines the core color tokens (--accent, --deep, --bg,
+   --surface) that style.css/app-shell.css already use everywhere via
+   var(...) -- so the whole app (buttons, chips, focus rings, sidebar,
+   brand mark) uses teal automatically without editing those files.
+
+   Load this AFTER style.css and app-shell.css (and after
+   auth-standalone.css on the login page) so these rules win.
+--------------------------------------------------------------------- */
+
+:root {
+  /* Core token overrides -- these feed every existing component that
+     already uses var(--accent), var(--deep), etc. */
+  --accent: #2F9E8F;
+  --accent-soft: #DCF0EC;
+  --deep: #123C3C;
+  --bg: #EAF3F0;
+  --surface: #EAF3F0;
+
+  /* Neomorphism-specific tokens */
+  --neo-base: #EAF3F0;
+  --neo-shadow-dark: #C3D9D3;
+  --neo-shadow-light: #FFFFFF;
+  --neo-dist: 8px;
+  --neo-blur: 16px;
+  --neo-dist-sm: 4px;
+  --neo-blur-sm: 8px;
+
+  --neo-deep-base: #123C3C;
+  --neo-deep-shadow-dark: #0A2626;
+  --neo-deep-shadow-light: #1C5252;
+
+  --neo-accent-ring: rgba(47, 158, 143, 0.4);
+}
+
+body { background: var(--neo-base); }
+
+/* ---------- Raised card mixin, applied to every panel-like surface ---------- */
+.panel,
+.stat-card,
+.result-card,
+.chat-panel,
+.auth-card,
+.notif-dropdown,
+.emergency-alert,
+.health-score-card {
+  background: var(--neo-base);
+  border: none !important;
+  border-radius: 18px;
+  box-shadow:
+    var(--neo-dist) var(--neo-dist) var(--neo-blur) var(--neo-shadow-dark),
+    calc(var(--neo-dist) * -1) calc(var(--neo-dist) * -1) var(--neo-blur) var(--neo-shadow-light);
+}
+
+/* Auth card sits on a dark background, unlike every other panel (which
+   sits on the light --neo-base) -- the dual light/dark shadow trick
+   doesn't work here, so give it a plain single drop shadow instead. */
+.auth-card {
+  box-shadow: 0 20px 45px rgba(10, 38, 38, 0.45) !important;
+}
+
+.result-card.rank-0 {
+  background: var(--neo-base);
+  box-shadow:
+    var(--neo-dist) var(--neo-dist) var(--neo-blur) var(--neo-shadow-dark),
+    calc(var(--neo-dist) * -1) calc(var(--neo-dist) * -1) var(--neo-blur) var(--neo-shadow-light),
+    inset 0 0 0 2px var(--neo-accent-ring);
+}
+.result-card.high-risk {
+  box-shadow:
+    var(--neo-dist) var(--neo-dist) var(--neo-blur) var(--neo-shadow-dark),
+    calc(var(--neo-dist) * -1) calc(var(--neo-dist) * -1) var(--neo-blur) var(--neo-shadow-light),
+    inset 0 0 0 2px rgba(226, 103, 58, 0.35);
+}
+
+/* ---------- Recessed / pressed-in surfaces: inputs, search, lists ---------- */
+.search-input,
+.field input,
+.field select,
+.field textarea,
+.chat-form input,
+.symptom-list,
+.confidence-bar {
+  background: var(--neo-base);
+  border: none !important;
+  box-shadow:
+    inset var(--neo-dist-sm) var(--neo-dist-sm) var(--neo-blur-sm) var(--neo-shadow-dark),
+    inset calc(var(--neo-dist-sm) * -1) calc(var(--neo-dist-sm) * -1) var(--neo-blur-sm) var(--neo-shadow-light);
+}
+.search-input:focus,
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.chat-form input:focus {
+  outline: none;
+  box-shadow:
+    inset var(--neo-dist-sm) var(--neo-dist-sm) var(--neo-blur-sm) var(--neo-shadow-dark),
+    inset calc(var(--neo-dist-sm) * -1) calc(var(--neo-dist-sm) * -1) var(--neo-blur-sm) var(--neo-shadow-light),
+    0 0 0 2px var(--neo-accent-ring);
+}
+.field input:disabled {
+  box-shadow:
+    inset var(--neo-dist-sm) var(--neo-dist-sm) var(--neo-blur-sm) var(--neo-shadow-dark),
+    inset calc(var(--neo-dist-sm) * -1) calc(var(--neo-dist-sm) * -1) var(--neo-blur-sm) var(--neo-shadow-light);
+  opacity: 0.6;
+}
+
+.confidence-bar-fill { box-shadow: none; }
+
+/* ---------- Raised buttons with a pressed :active state ---------- */
+.btn-primary,
+.btn-secondary,
+.btn-icon,
+.auth-tab {
+  border: none !important;
+  box-shadow:
+    var(--neo-dist-sm) var(--neo-dist-sm) var(--neo-blur-sm) var(--neo-shadow-dark),
+    calc(var(--neo-dist-sm) * -1) calc(var(--neo-dist-sm) * -1) var(--neo-blur-sm) var(--neo-shadow-light);
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+.btn-secondary,
+.btn-icon {
+  background: var(--neo-base);
+  color: var(--deep);
+}
+.auth-tab.active {
+  box-shadow:
+    inset var(--neo-dist-sm) var(--neo-dist-sm) var(--neo-blur-sm) var(--neo-shadow-dark),
+    inset calc(var(--neo-dist-sm) * -1) calc(var(--neo-dist-sm) * -1) var(--neo-blur-sm) var(--neo-shadow-light);
+  background: var(--neo-base);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #268578;
+}
+.btn-primary:active:not(:disabled),
+.btn-secondary:active,
+.btn-icon:active {
+  box-shadow:
+    inset var(--neo-dist-sm) var(--neo-dist-sm) var(--neo-blur-sm) var(--neo-shadow-dark),
+    inset calc(var(--neo-dist-sm) * -1) calc(var(--neo-dist-sm) * -1) var(--neo-blur-sm) var(--neo-shadow-light);
+  transform: translateY(1px);
+}
+.btn-primary:disabled {
+  background: #B7CFC9;
+  color: #5C7A73;
+  box-shadow: none;
+}
+
+.chip,
+.badge,
+.mock-tag {
+  border: none !important;
+  box-shadow:
+    3px 3px 6px var(--neo-shadow-dark),
+    -3px -3px 6px var(--neo-shadow-light);
+}
+.mock-tag { background: var(--neo-base); }
+
+/* ---------- Sidebar: dark neomorphism variant ---------- */
+.sidebar {
+  background: var(--neo-deep-base);
+}
+.nav-link.active {
+  background: var(--neo-deep-base);
+  color: white;
+  box-shadow:
+    inset 3px 3px 6px var(--neo-deep-shadow-dark),
+    inset -3px -3px 6px var(--neo-deep-shadow-light);
+}
+.sidebar-user,
+.sidebar-logout {
+  background: var(--neo-deep-base);
+  box-shadow:
+    3px 3px 6px var(--neo-deep-shadow-dark),
+    -3px -3px 6px var(--neo-deep-shadow-light);
+}
+.sidebar-logout:active {
+  box-shadow:
+    inset 3px 3px 6px var(--neo-deep-shadow-dark),
+    inset -3px -3px 6px var(--neo-deep-shadow-light);
+}
+.user-avatar {
+  box-shadow:
+    2px 2px 4px rgba(0,0,0,0.25),
+    -1px -1px 3px rgba(255,255,255,0.15);
+}
+
+/* ---------- Topbar: flat, soft-lifted strip instead of a hard border ---------- */
+.topbar-slim {
+  background: var(--neo-base);
+  border-bottom: none !important;
+  box-shadow: 0 4px 10px rgba(163, 208, 197, 0.5);
+}
+.topbar-avatar .user-avatar {
+  box-shadow:
+    2px 2px 5px var(--neo-shadow-dark),
+    -2px -2px 5px var(--neo-shadow-light);
+}
+
+/* ---------- Data tables: soft row separation instead of hard lines ---------- */
+.data-table th { border-bottom: none; }
+.data-table td { border-bottom: 1px solid rgba(163, 208, 197, 0.5); }
+.data-table tr:hover td { background: rgba(255,255,255,0.5); }
+
+/* ---------- Auth page background ---------- */
+.auth-body { background: var(--neo-deep-base); }

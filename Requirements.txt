@@ -2,3 +2,6 @@ pandas
 scikit-learn
 joblib
 numpy
+pymongo
+flask-mail
+itsdangerous

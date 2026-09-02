@@ -78,7 +78,7 @@
         <!-- ============ Sign up: verify OTP before account is created ============ -->
         <form id="signupOtpStep" class="auth-form hidden">
           <p class="auth-step-title">🔐 Verify your email</p>
-          <p class="hint">Demo code (no real email backend yet): <strong id="signupDemoCode"></strong></p>
+          <p class="hint"><strong id="signupDemoCode"></strong></p>
           <div class="field">
             <label for="signup-otp">6-digit code</label>
             <input id="signup-otp" type="text" maxlength="6" required />
@@ -155,17 +155,15 @@
 <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 <script>
 /* ---------------------------------------------------------------------
-   Forgot-password flow (email -> OTP -> new password). Self-contained
-   so it doesn't touch auth.js's existing login/signup/2FA tab logic --
-   it only reacts to the new elements added above. Demo-only: the OTP
-   is generated and shown on screen, matching the existing 2FA mock
-   pattern, since there's no real email backend yet.
+   Forgot-password flow (email -> OTP -> new password) stays client-only
+   demo, unchanged. Sign-up now calls the real backend (/api/signup,
+   /api/verify-otp) for a real emailed OTP instead of an on-screen code.
 --------------------------------------------------------------------- */
 (function () {
   var steps = ['loginForm', 'signupForm', 'twoFAStep', 'forgotEmailStep', 'forgotOtpStep', 'resetPasswordStep', 'resetSuccessStep', 'signupOtpStep'];
   var tabs = document.querySelector('.auth-tabs');
   var currentForgotOtp = null;
-  var currentSignupOtp = null;
+  var pendingSignup = null; // { name, email } while the OTP step is open
 
   function showStep(id) {
     steps.forEach(function (stepId) {
@@ -192,6 +190,17 @@
     return String(Math.floor(100000 + Math.random() * 900000));
   }
 
+  async function apiPost(url, body) {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    return data;
+  }
+
   document.getElementById('forgotPasswordLink').addEventListener('click', function (e) {
     e.preventDefault();
     showStep('forgotEmailStep');
@@ -206,6 +215,7 @@
     });
   });
 
+  // --- Forgot-password flow: unchanged, still client-only demo ---------
   document.getElementById('forgotEmailStep').addEventListener('submit', function (e) {
     e.preventDefault();
     currentForgotOtp = generateCode();
@@ -249,42 +259,67 @@
   });
 
   /* ---------------------------------------------------------------------
-     Sign-up OTP gate. auth.js already listens for signupForm's 'submit'
-     event to actually create the account, and its exact logic isn't
-     visible here -- so rather than adding a second, possibly-conflicting
-     submit listener on the same form, this intercepts the CLICK on the
-     "Create account" button instead. preventDefault() on that click stops
-     the browser from ever emitting a submit event, so auth.js's handler
-     doesn't run yet. Only once the OTP is verified does this call
-     signupForm.requestSubmit() to dispatch a real submit event -- at
-     which point auth.js's existing handler runs exactly as before.
+     Sign-up: now calls the real backend. Clicking "Create account" posts
+     to /api/signup, which creates an unverified user in MongoDB and
+     emails a real OTP. On success, show the OTP step. On failure (e.g.
+     email already registered), show the error inline instead of
+     proceeding.
   --------------------------------------------------------------------- */
   var signupForm = document.getElementById('signupForm');
   var signupSubmitBtn = signupForm.querySelector('button[type="submit"]');
+  var authError = document.getElementById('authError');
 
   signupSubmitBtn.addEventListener('click', function (e) {
     if (!signupForm.checkValidity()) return; // let native validation messages show
     e.preventDefault();
-    currentSignupOtp = generateCode();
-    document.getElementById('signupDemoCode').textContent = currentSignupOtp;
-    document.getElementById('signup-otp').value = '';
-    document.getElementById('signupOtpError').style.display = 'none';
-    showStep('signupOtpStep');
+
+    var name = document.getElementById('su-name').value.trim();
+    var email = document.getElementById('su-email').value.trim().toLowerCase();
+    var password = document.getElementById('su-password').value;
+
+    authError.style.display = 'none';
+    signupSubmitBtn.disabled = true;
+
+    apiPost('/api/signup', { name: name, email: email, password: password })
+      .then(function () {
+        pendingSignup = { name: name, email: email };
+        document.getElementById('signupDemoCode').textContent = 'Code sent — check your email inbox.';
+        document.getElementById('signup-otp').value = '';
+        document.getElementById('signupOtpError').style.display = 'none';
+        showStep('signupOtpStep');
+      })
+      .catch(function (err) {
+        authError.textContent = err.message;
+        authError.style.display = 'block';
+      })
+      .finally(function () {
+        signupSubmitBtn.disabled = false;
+      });
   });
 
   document.getElementById('signupOtpStep').addEventListener('submit', function (e) {
     e.preventDefault();
     var entered = document.getElementById('signup-otp').value.trim();
     var errorEl = document.getElementById('signupOtpError');
-    if (entered !== currentSignupOtp) {
-      errorEl.textContent = "That code doesn't match. Check the demo code and try again.";
+
+    if (!pendingSignup) {
+      errorEl.textContent = 'Something went wrong -- please sign up again.';
       errorEl.style.display = 'block';
       return;
     }
-    signupForm.requestSubmit();
-    // Fallback in case auth.js doesn't already move the view on success.
-    setActiveTab('loginForm');
-    showStep('loginForm');
+
+    apiPost('/api/verify-otp', { email: pendingSignup.email, code: entered })
+      .then(function () {
+        pendingSignup = null;
+        authError.style.display = 'none';
+        setActiveTab('loginForm');
+        showStep('loginForm');
+        document.getElementById('li-email').value = '';
+      })
+      .catch(function (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      });
   });
 })();
 </script>

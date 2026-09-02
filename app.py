@@ -1,3 +1,5 @@
+
+
 # """
 # app.py
 # ------
@@ -6,7 +8,9 @@
 
 #   POST /api/predict  -> Module 1 (disease prediction, DT vs RF)
 #                          + Module 4 (SHAP-based explainability)
+#                          + reliability flags (confidence, disagreement, severity)
 #   POST /api/chat      -> Module 2 (AI health chat assistant)
+#   POST /api/signup, /api/login, /verify/<token> -> Module 13 (auth)
 
 # Plus page routes for the sidebar app shell (predict, profile, history,
 # dashboard, hospitals, reminders, account, admin).
@@ -22,14 +26,58 @@
 # import shap
 # from flask import Flask, request, jsonify, render_template
 # from dotenv import load_dotenv
+# from flask_mail import Mail
 
-# from chat_assistant import get_chat_response
+# from backend.services.chat_assistant import get_chat_response
+# from backend.routes.auth_routes import auth_bp
 
+
+# # Must run before anything reads os.getenv(...) below.
 # load_dotenv()
 
 # app = Flask(__name__)
 
+# # --- Auth / mail config (must come after `app = Flask(...)`) -----------
+# app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+# app.config["MAIL_SERVER"] = "smtp.gmail.com"
+# app.config["MAIL_PORT"] = 587
+# app.config["MAIL_USE_TLS"] = True
+# app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+# app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+# mail = Mail(app)
+# app.register_blueprint(auth_bp)
+
 # MODELS_DIR = "models"
+
+# # --- Tunable reliability thresholds ------------------------------------
+# # Below this top-1 confidence, the result is treated as inconclusive.
+# CONFIDENCE_THRESHOLD = 35.0
+
+# # A high-severity disease is only flagged "High Risk" if it appears in the
+# # combined top-3 of EITHER model AND clears this higher bar on its own.
+# HIGH_SEVERITY_THRESHOLD = 40.0
+
+# # Below this many reported symptoms, always flag low_symptom_count.
+# MIN_RELIABLE_SYMPTOM_COUNT = 4
+
+# # Edit this to match your dataset's actual disease name strings exactly
+# # (case-sensitive -- check symptom_columns.json's sibling label list or
+# # your training script for the real class names).
+# HIGH_SEVERITY_DISEASES = {
+#     "AIDS",
+#     "Tuberculosis",
+#     "Hepatitis A",
+#     "Hepatitis B",
+#     "Hepatitis C",
+#     "Hepatitis D",
+#     "Hepatitis E",
+#     "Heart attack",
+#     "Paralysis (brain hemorrhage)",
+#     "Dengue",
+#     "Malaria",
+#     "Typhoid",
+# }
 
 # # Load models once at startup, not per-request -- reloading a pickle on
 # # every API call would be slow and pointless since they don't change.
@@ -42,6 +90,7 @@
 # # Built once at startup, same reasoning as loading the models themselves --
 # # SHAP TreeExplainer setup is not free, so we don't want to redo it per request.
 # rf_explainer = shap.TreeExplainer(rf_model)
+# dt_explainer = shap.TreeExplainer(dt_model)
 
 
 # def symptoms_to_vector(symptoms):
@@ -55,12 +104,33 @@
 #     return [1 if col in cleaned else 0 for col in SYMPTOM_COLUMNS]
 
 
+# def top_k_predictions(model, vector_2d, k=3):
+#     """Return [{"disease": ..., "confidence": ...}, ...] sorted descending."""
+#     probs = model.predict_proba(vector_2d)[0]
+#     classes = model.classes_
+#     top_idx = np.argsort(probs)[::-1][:k]
+#     return [
+#         {"disease": classes[i], "confidence": round(float(probs[i]) * 100, 1)}
+#         for i in top_idx
+#     ]
+
+
 # def explain_prediction(vector_2d, predicted_disease, cleaned_symptoms):
 #     """
 #     Per-prediction (local) explainability using SHAP -- contribution values
-#     are specific to THIS input and THIS predicted disease, unlike
-#     rf_model.feature_importances_ which is a fixed global ranking.
-#     Returns [{"symptom": ..., "contribution_percent": ...}, ...] sorted desc.
+#     are specific to THIS input and THIS predicted disease.
+
+#     Unlike the old version, this KEEPS symptoms with a negative SHAP value
+#     (i.e. symptoms that argue AGAINST the predicted disease) instead of
+#     silently dropping them -- hiding negative evidence made a shaky
+#     prediction look artificially clean-cut.
+
+#     Returns a list of:
+#         {"symptom": str, "direction": "supports" | "against" | "neutral",
+#          "contribution_percent": float}
+#     sorted by absolute SHAP value descending. "supports" percentages sum to
+#     ~100% among themselves; "against" percentages sum to ~100% among
+#     themselves -- they're two separate shares, not netted together.
 #     """
 #     class_index = list(rf_model.classes_).index(predicted_disease)
 #     shap_values = rf_explainer.shap_values(np.array(vector_2d))
@@ -72,25 +142,48 @@
 #     else:
 #         class_shap_values = shap_values[0, :, class_index]
 
-#     contributions = {
+#     reported = {
 #         col: class_shap_values[i]
 #         for i, col in enumerate(SYMPTOM_COLUMNS)
-#         if col in cleaned_symptoms and class_shap_values[i] > 0
+#         if col in cleaned_symptoms
 #     }
 
-#     total = sum(contributions.values())
-#     if total == 0:
-#         # None of the reported symptoms pushed toward this class (rare
-#         # edge case) -- split evenly instead of returning an empty list.
-#         equal_share = round(100 / len(cleaned_symptoms), 1) if cleaned_symptoms else 0
-#         return [{"symptom": s, "contribution_percent": equal_share} for s in cleaned_symptoms]
+#     if not reported:
+#         return []
 
-#     result = [
-#         {"symptom": symptom, "contribution_percent": round((value / total) * 100, 1)}
-#         for symptom, value in contributions.items()
-#     ]
+#     positive_total = sum(v for v in reported.values() if v > 0)
+#     negative_total = sum(abs(v) for v in reported.values() if v < 0)
+
+#     result = []
+#     for symptom, value in reported.items():
+#         if value > 0:
+#             pct = round((value / positive_total) * 100, 1) if positive_total > 0 else 0.0
+#             direction = "supports"
+#         elif value < 0:
+#             pct = round((abs(value) / negative_total) * 100, 1) if negative_total > 0 else 0.0
+#             direction = "against"
+#         else:
+#             pct = 0.0
+#             direction = "neutral"
+#         result.append({"symptom": symptom, "direction": direction, "contribution_percent": pct})
+
 #     result.sort(key=lambda x: x["contribution_percent"], reverse=True)
 #     return result
+
+
+# def severity_flag(combined_top3):
+#     """
+#     Decide whether to show a "High Risk" banner. Decoupled from "whatever
+#     is ranked #1" -- a high-severity disease only triggers the flag if it
+#     (a) appears in the combined top-3 list from EITHER model, and
+#     (b) individually clears HIGH_SEVERITY_THRESHOLD on its own confidence.
+
+#     combined_top3: list of {"disease": ..., "confidence": ...}
+#     """
+#     for entry in combined_top3:
+#         if entry["disease"] in HIGH_SEVERITY_DISEASES and entry["confidence"] >= HIGH_SEVERITY_THRESHOLD:
+#             return True, entry["disease"]
+#     return False, None
 
 
 # # ---------------------------------------------------------------------
@@ -132,9 +225,6 @@
 #     return render_template("reminders.html", active="reminders")
 
 
-# # @app.route("/account", methods=["GET"])
-# # def auth_page():
-# #     return render_template("account.html", active="auth")
 # @app.route("/account", methods=["GET"])
 # def account_page():
 #     return render_template("account.html", active="account")
@@ -143,6 +233,7 @@
 # @app.route("/admin", methods=["GET"])
 # def admin_page():
 #     return render_template("admin.html", active="admin")
+
 
 # @app.route("/admin-login", methods=["GET"])
 # def admin_login_page():
@@ -184,28 +275,35 @@
 #     vector = [symptoms_to_vector(symptoms)]
 #     cleaned_symptoms = {s.strip().lower().replace(" ", "_") for s in symptoms}
 
-#     # Random Forest is the primary prediction -- calibrated, spread-out
-#     # confidence across related diseases (per your Module 1 findings).
-#     probs = rf_model.predict_proba(vector)[0]
-#     classes = rf_model.classes_
-#     top3_idx = np.argsort(probs)[::-1][:3]
-#     top3 = [
-#         {"disease": classes[i], "confidence": round(float(probs[i]) * 100, 1)}
-#         for i in top3_idx
-#     ]
+#     rf_top3 = top_k_predictions(rf_model, vector, k=3)
+#     dt_top3 = top_k_predictions(dt_model, vector, k=3)
 
-#     # Decision Tree included too, so the frontend can show the DT vs RF
-#     # comparison view from your Module 1 spec.
-#     dt_pred = dt_model.predict(vector)[0]
+#     top_disease = rf_top3[0]["disease"]
+#     top_confidence = rf_top3[0]["confidence"]
 
-#     # Module 4: explain WHY the top RF prediction was made
-#     prediction_reason = explain_prediction(vector, top3[0]["disease"], cleaned_symptoms)
+#     prediction_reason = explain_prediction(vector, top_disease, cleaned_symptoms)
+
+#     models_disagree = rf_top3[0]["disease"] != dt_top3[0]["disease"]
+#     inconclusive = top_confidence < CONFIDENCE_THRESHOLD
+#     low_symptom_count = len(cleaned_symptoms) < MIN_RELIABLE_SYMPTOM_COUNT
+
+#     high_risk, high_risk_disease = severity_flag(rf_top3 + dt_top3)
 
 #     return jsonify({
-#         "top3_predictions": top3,
-#         "random_forest_top_prediction": top3[0]["disease"],
-#         "decision_tree_prediction": dt_pred,
+#         "top3_predictions": rf_top3,
+#         "random_forest_top_prediction": top_disease,
+#         "decision_tree_prediction": dt_top3[0]["disease"],
+#         "decision_tree_top3": dt_top3,
 #         "prediction_reason": prediction_reason,
+#         "reliability": {
+#             "inconclusive": inconclusive,
+#             "confidence_threshold": CONFIDENCE_THRESHOLD,
+#             "low_symptom_count": low_symptom_count,
+#             "min_recommended_symptoms": MIN_RELIABLE_SYMPTOM_COUNT,
+#             "models_disagree": models_disagree,
+#             "high_risk": high_risk,
+#             "high_risk_disease": high_risk_disease,
+#         },
 #     }), 200
 
 
@@ -240,10 +338,14 @@ app.py
 The Flask entry point for MedAssist AI. Loads the models saved by
 train_model.py and exposes:
 
-  POST /api/predict  -> Module 1 (disease prediction, DT vs RF)
-                         + Module 4 (SHAP-based explainability)
-                         + reliability flags (confidence, disagreement, severity)
-  POST /api/chat      -> Module 2 (AI health chat assistant)
+  POST /api/predict     -> Module 1 (disease prediction, DT vs RF)
+                            + Module 4 (SHAP-based explainability)
+                            + reliability flags (confidence, disagreement, severity)
+  POST /api/chat        -> Module 2 (AI health chat assistant)
+  POST /api/signup      -> Module 13 (auth) -- creates user, emails OTP
+  POST /api/verify-otp  -> Module 13 (auth) -- verifies signup OTP
+  POST /api/login       -> Module 13 (auth) -- login, gated on is_verified
+  GET/POST /api/profile -> Module 3 (personalized health profile)
 
 Plus page routes for the sidebar app shell (predict, profile, history,
 dashboard, hospitals, reminders, account, admin).
@@ -259,17 +361,28 @@ import numpy as np
 import shap
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
+from flask_mail import Mail
 
-from chat_assistant import get_chat_response
+from backend.services.chat_assistant import get_chat_response
+from backend.routes.auth_routes import auth_bp
+from backend.routes.profile_routes import profile_bp
 
-# load_dotenv()
+# Must run before anything reads os.getenv(...) below.
 load_dotenv()
-found = load_dotenv()
-print("`.env` loaded:", found)
-print("CWD:", os.getcwd())
-print("Key present:", bool(os.getenv("GEMINI_API_KEY")))
 
 app = Flask(__name__)
+
+# --- Auth / mail config (must come after `app = Flask(...)`) -----------
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+mail = Mail(app)
+app.register_blueprint(auth_bp)
+app.register_blueprint(profile_bp)
 
 MODELS_DIR = "models"
 

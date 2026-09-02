@@ -1,8 +1,9 @@
 // ---------------------------------------------------------------------
 // Module 3: Personalized Health Profile
-// Stored via MA.saveProfile/getProfile (localStorage) until a real
-// /api/profile route exists. Swap loadProfile/saveProfile bodies for
-// fetch() calls then -- the form logic below won't need to change.
+// Backed by MongoDB via /api/profile (GET to load, POST to save), keyed
+// to the logged-in user's email from MA.getSession(). Form logic is the
+// same as before -- only loadProfile/save now hit the real backend
+// instead of localStorage.
 // ---------------------------------------------------------------------
 
 const fields = {
@@ -19,18 +20,34 @@ const form = document.getElementById("profileForm");
 const savedNote = document.getElementById("profileSavedNote");
 const preview = document.getElementById("recommendationPreview");
 
-function loadProfile() {
-  const p = MA.getProfile();
-  if (!p) return;
-  fields.name.value = p.name || "";
-  fields.age.value = p.age || "";
-  fields.gender.value = p.gender || "";
-  fields.height.value = p.heightCm || "";
-  fields.weight.value = p.weightKg || "";
-  fields.history.value = p.history || "";
-  fields.allergies.value = p.allergies || "";
+function currentEmail() {
+  const session = MA.getSession();
+  return session ? session.email : null;
+}
+
+async function loadProfile() {
+  const email = currentEmail();
+  if (!email) return; // not logged in -- shell.js should already be redirecting
+
+  let profile;
+  try {
+    const res = await fetch(`/api/profile?email=${encodeURIComponent(email)}`);
+    if (!res.ok) throw new Error("Could not load profile");
+    profile = await res.json();
+  } catch (err) {
+    console.error(err);
+    return;
+  }
+
+  fields.name.value = profile.name || "";
+  fields.age.value = profile.age || "";
+  fields.gender.value = profile.gender || "";
+  fields.height.value = profile.heightCm || "";
+  fields.weight.value = profile.weightKg || "";
+  fields.history.value = profile.history || "";
+  fields.allergies.value = profile.allergies || "";
   updateBMI();
-  updatePreview(p);
+  updatePreview(profile);
 }
 
 function updateBMI() {
@@ -62,9 +79,13 @@ function updatePreview(profile) {
 
 [fields.height, fields.weight].forEach((f) => f.addEventListener("input", updateBMI));
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const email = currentEmail();
+  if (!email) return;
+
   const profile = {
+    email,
     name: fields.name.value.trim(),
     age: fields.age.value ? Number(fields.age.value) : null,
     gender: fields.gender.value,
@@ -73,10 +94,21 @@ form.addEventListener("submit", (e) => {
     history: fields.history.value.trim(),
     allergies: fields.allergies.value.trim(),
   };
-  MA.saveProfile(profile);
-  updatePreview(profile);
-  savedNote.style.display = "inline";
-  setTimeout(() => (savedNote.style.display = "none"), 2500);
+
+  try {
+    const res = await fetch("/api/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    });
+    if (!res.ok) throw new Error("Save failed");
+    updatePreview(profile);
+    savedNote.style.display = "inline";
+    setTimeout(() => (savedNote.style.display = "none"), 2500);
+  } catch (err) {
+    console.error(err);
+    alert("Could not save your profile. Please try again.");
+  }
 });
 
 loadProfile();
